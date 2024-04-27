@@ -3,11 +3,11 @@ CFLAGS=-I.
 CPPFLAGS=-std=c++11
 LIBS=-lssl -lcrypto  # OpenSSL libraries
 TARGETS=Test
-OBJECTS=MachineList.o main.o
+OBJECTS=MachineList.o PartitionMap.o main.o
 
 all: $(TARGETS)
 
-Test: main.o MachineList.o
+Test: main.o MachineList.o PartitionMap.o
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBS)
 
 %.o: %.cpp
