@@ -14,6 +14,9 @@ public:
     Machine(const std::string &ipAddress) : ipAddress(ipAddress), next(nullptr), prev(nullptr) {}
 };
 
+// Circular Linked List object representing a network of machines. 
+// When a file is uploaded to a machine, its copy should be uploaded to the next machine in this circular list. 
+// The machine list must contain a minimum of two machines, as we require at least two machines for storing the original and backup files.
 class MachineList {
 private:
     Machine *head;
