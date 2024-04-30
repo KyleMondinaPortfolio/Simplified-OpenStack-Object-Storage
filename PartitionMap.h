@@ -29,6 +29,7 @@ public:
     bool add(const std::string &ipAddress);
     bool remove(const std::string &ipAddress);
     void display();
+    
 private:
     std::map<std::vector<Range>, std::string> partitionMap;
     int machineCount;
@@ -37,6 +38,5 @@ private:
 std::vector<std::vector<Range>> split(const std::vector<Range>& ranges, int n);
 std::vector<Range> apportion(std::vector<Range>& ranges, int n);
 std::vector<Range> concatenateVectors(const std::vector<Range>& vec1, const std::vector<Range>& vec2);
-
 
 #endif /* PARTITION_MAP_H */
