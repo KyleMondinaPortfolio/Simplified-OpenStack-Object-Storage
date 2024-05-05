@@ -141,6 +141,7 @@ void Server::listUser() {
 
 void Server::uploadObj(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received upload command from client " << clientfd << std::endl;
 	char buffer[BUFFER_SIZE] = {0};
 
     // Parse the command
@@ -248,11 +249,12 @@ void Server::removeDisk() {
 
 void Server::cleanDisks(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received clean command from client " << clientfd << std::endl;
 
     std::string serverAck = "Server: \n";
     for (const auto &server: objectManager.servers) {
         deleteDir(server, "/tmp/kmondina");
-        serverAck += server + " cleared";
+        serverAck += server + ":/tmp/kmondina cleared\n";
     }
 
     send(clientfd, serverAck.c_str(), serverAck.length(), 0);
