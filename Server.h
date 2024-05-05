@@ -13,6 +13,8 @@
 #include <cmath>
 #include <iostream>
 #include <openssl/md5.h>
+#include <iomanip>
+
 
 class Server {
 public:
@@ -40,5 +42,6 @@ private:
 
 int generateRandomPortNumber();
 uint64_t hashAndMap(const std::string& str, int n);
+std::string calculateMD5(const std::string& filename);
 
 #endif /* SERVER_H */

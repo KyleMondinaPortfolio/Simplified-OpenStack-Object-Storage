@@ -230,3 +230,30 @@ uint64_t hashAndMap(const std::string& str, int n) {
     uint64_t range = pow(2, n);
     return hashValue % range;
 }
+
+std::string calculateMD5(const std::string& filename) {
+    MD5_CTX md5Context;
+    unsigned char digest[MD5_DIGEST_LENGTH];
+    char buffer[4096];
+
+    MD5_Init(&md5Context);
+
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return "";
+    }
+
+    while (file.read(buffer, sizeof(buffer))) {
+        MD5_Update(&md5Context, buffer, file.gcount());
+    }
+
+    MD5_Final(digest, &md5Context);
+
+    std::stringstream ss;
+    for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
+    }
+
+    return ss.str();
+}
