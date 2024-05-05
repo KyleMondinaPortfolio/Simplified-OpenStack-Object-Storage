@@ -1,4 +1,6 @@
 #include "Server.h"
+#include "MachineList.h"
+#include "SCPFunctions.h"
 
 Server::Server(const std::vector<std::string>& ipAddresses, int power)
     : ipAddresses(ipAddresses), power(power), objectManager(ipAddresses, power)
@@ -180,6 +182,33 @@ void Server::uploadObj(int clientfd, const std::string &command) {
     }
 	// Close the file!!! Very important!!!
 	outfile.close();
+
+    
+    // Create the digital signature of the file and write it to the meta data file
+    std::string ds = createDigitalSignature(localFile); 
+    std::string localFileMD = "/tmp/stagingDir/." + fileName;
+    std::ofstream fileMD(localFileMD);
+    fileMD << ds;
+    fileMD.close();
+
+    uint64_t partition = hashAndMap(fileName, power); // Find which partition the file is hashed to 
+    std::string mainMachine = objectManager.partitionMap.lookup(partition); // Find the ipAddress of the machine the main copy will be store
+    std::string backupMachine = objectManager.machineList.find(mainMachine)->next->ipAddress; // Find the ipAddress of the machine the back up copy will be stored
+    std::cout << "Main copy of " << fileName << " should be stored in Machine with ipAddress " << mainMachine << std::endl;
+    std::cout << "Backup copy of " << fileName << " should be stored in Machine with ipAddress " << backupMachine << std::endl;
+    FileObject fileObj = FileObject(fileName, user, ds, partition);
+
+    // Update the map for main copies and backup copies
+    objectManager.mainCopies[mainMachine].push_back(fileObj);
+    objectManager.backupCopies[backupMachine].push_back(fileObj);
+
+    // Transfer the file and its metadata to the appropriate machines
+    createDir(mainMachine, "/tmp/" + user);
+    createDir(backupMachine, "/tmp/" + user);
+    transferObj(localFile, mainMachine + ":/tmp/" + user);
+    transferObj(localFileMD, mainMachine + ":/tmp/" + user);
+    transferObj(localFile, backupMachine + ":/tmp/" + user);
+    transferObj(localFileMD, backupMachine + ":/tmp/" + user);
 
     std::string listDir = "ls /tmp/stagingDir";
     system(listDir.c_str());

@@ -25,7 +25,6 @@ public:
     std::string removeDisk();
     MachineList machineList;
     PartitionMap partitionMap;
-private:
     std::set<std::string> servers;
     std::map<std::string, std::vector<FileObject>> mainCopies;
     std::map<std::string, std::vector<FileObject>> backupCopies;
