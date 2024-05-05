@@ -8,8 +8,10 @@
 class FileObject {
 public:
     std::string fileName;
+    std::string user;
+    std::string ds;
     uint64_t partition;
-    FileObject(std::string fileName, uint64_t partition): fileName(fileName), partition(partition) {}
+    FileObject(std::string fileName, std::string user, std::string ds, uint64_t partition): fileName(fileName), user(user), ds(ds), partition(partition) {}
 };
 
 class ObjectManager {
