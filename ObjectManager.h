@@ -22,10 +22,9 @@ public:
     std::string addDisk();
     std::string removeDisk();
     MachineList machineList;
-
+    PartitionMap partitionMap;
 private:
     std::set<std::string> servers;
-    PartitionMap partitionMap;
     std::map<std::string, std::vector<FileObject>> mainCopies;
     std::map<std::string, std::vector<FileObject>> backupCopies;
     int machineCount;

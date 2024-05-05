@@ -65,7 +65,7 @@ void Client::run() {
 		} else if (firstWord == "list") {
 			listUser();
 		} else if (firstWord == "upload") {
-			uploadObj();
+			uploadObj(command);
 		} else if (firstWord == "delete") {
 			deleteObj();
 		} else if (firstWord == "add") {
@@ -91,7 +91,59 @@ void Client::listUser() {
 	send(sockfd, test.c_str(), test.length(), 0);
 }
 
-void Client::uploadObj() {
+void Client::uploadObj(const std::string &command) {
+	// Parse the supplied file object
+	size_t space = command.find(' ');
+	std::string fileObject = command.substr(space+1);
+	size_t slash = fileObject.find('/');
+	std::string fileName = fileObject.substr(slash+1);
+
+	// Verify if the supplied file object exists
+	std::ifstream infile(fileName, std::ios::binary);
+	if (!infile){
+		std::cout << "Unable to open " << fileName << ". Make sure you input a valid file" << std::endl;
+		return;
+	}
+
+	// Send the command to the server
+	send(sockfd, command.c_str(), command.length(), 0);
+
+	// Receive file size request from server
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
+
+	// Send file size to server
+	infile.seekg(0, std::ios::end);
+	size_t fileSize = infile.tellg();
+	infile.seekg(0, std::ios::beg);
+	send(sockfd, &fileSize, sizeof(fileSize), 0);
+	std::cout << "File size: " << fileSize << std::endl;
+	std::cout << "File size sent to server" << std::endl;
+
+	// Receive file content request from the server
+	memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
+
+	// Send file contents to the server
+	memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	while (!infile.eof()) {
+		infile.read(buffer, BUFFER_SIZE);
+		int bytesRead = infile.gcount();
+		send(sockfd, buffer, bytesRead, 0);
+	}
+	infile.close();
+
+
 	std::string test = "upload ";
 	send(sockfd, test.c_str(), test.length(), 0);
 }

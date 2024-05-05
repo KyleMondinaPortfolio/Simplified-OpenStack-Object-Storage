@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <cmath>
 #include <iostream>
+#include <openssl/md5.h>
 
 class Server {
 public:
@@ -30,7 +31,7 @@ private:
     std::mutex mtx;
     void downloadObj();
     void listUser();
-    void uploadObj();
+    void uploadObj(int clientfd, const std::string &command);
     void deleteObj();
     void addDisk();
     void removeDisk();
@@ -38,5 +39,6 @@ private:
 };
 
 int generateRandomPortNumber();
+uint64_t hashAndMap(const std::string& str, int n);
 
 #endif /* SERVER_H */

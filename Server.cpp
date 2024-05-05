@@ -104,7 +104,7 @@ void Server::handleClient(int clientfd) {
             listUser();
             continue;
         } else if (firstWord == "upload") {
-            uploadObj();
+            uploadObj(clientfd, command);
             continue;
         } else if (firstWord == "delete") {
             deleteObj();
@@ -137,10 +137,53 @@ void Server::listUser() {
     std::cout << "List command" << std::endl;
 }
 
-void Server::uploadObj() {
+void Server::uploadObj(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+	char buffer[BUFFER_SIZE] = {0};
 
-    std::cout << "Upload command" << std::endl;
+    // Parse the command
+    size_t space = command.find(' ');
+	std::string fileObject = command.substr(space+1);
+	size_t slash = fileObject.find('/');
+	std::string fileName = fileObject.substr(slash+1);
+    std::string user = fileObject.substr(0,slash);
+
+    // Request file size from the client
+    std::string requestFileSize = "Server: request file size";
+    send(clientfd, requestFileSize.c_str(), requestFileSize.size(), 0);
+
+    // Receive file size from the server
+    size_t fileSize;
+	int bytesReceived = recv(clientfd, &fileSize, sizeof(fileSize), 0);
+	if (bytesReceived != sizeof(fileSize)) {
+		std::cerr << "Failed to receive file size from client" << std::endl;
+		return;
+	}
+
+    // Request file contents from the client
+    std::string requestFileContent = "Server: received file size, requesting file content";
+    send(clientfd, requestFileContent.c_str(), requestFileContent.size(), 0);
+
+    // Receive the file from the client
+    std::string localFile = "/tmp/stagingDir/" + fileName;
+    std::ofstream outfile(localFile.c_str(), std::ios::binary);
+    memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	size_t totalReceived = 0;
+    while (totalReceived < fileSize) {
+        bytesReceived = recv(clientfd, buffer, BUFFER_SIZE, 0);
+        if (bytesReceived <= 0) {
+            std::cerr << "Failed to receive file data from client" << std::endl;
+            continue;
+        }
+        outfile.write(buffer, bytesReceived);
+        totalReceived += bytesReceived;
+    }
+	// Close the file!!! Very important!!!
+	outfile.close();
+
+    std::string listDir = "ls /tmp/stagingDir";
+    system(listDir.c_str());
+    return;
 }
 
 void Server::deleteObj() {
@@ -170,4 +213,20 @@ void Server::cleanDisks() {
 int generateRandomPortNumber() {
     srand(time(NULL));
 	return rand() % (65535 - 1024 + 1) + 1024;
+}
+
+uint64_t hashAndMap(const std::string& str, int n) {
+    // Hash the string using MD5
+    unsigned char hash[MD5_DIGEST_LENGTH];
+    MD5((const unsigned char*)str.c_str(), str.length(), hash);
+    
+    // Convert the hash to a uint64_t
+    uint64_t hashValue = 0;
+    for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
+        hashValue |= (uint64_t)hash[i] << (8 * i);
+    }
+    
+    // Map the hash value to a range within 2^n
+    uint64_t range = pow(2, n);
+    return hashValue % range;
 }

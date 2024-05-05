@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <array>
 #include <algorithm>
+#include <fstream>
 
 class Client {
 public:
@@ -25,7 +26,7 @@ private:
     int sockfd;
     void downloadObj();
     void listUser();
-    void uploadObj();
+    void uploadObj(const std::string &command);
     void deleteObj();
     void addDisk();
     void removeDisk();
