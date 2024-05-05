@@ -143,9 +143,15 @@ void Client::uploadObj(const std::string &command) {
 	}
 	infile.close();
 
-
-	std::string test = "upload ";
-	send(sockfd, test.c_str(), test.length(), 0);
+	// Receive Server ack
+	memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
+	
 }
 
 void Client::deleteObj() {

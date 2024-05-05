@@ -192,6 +192,7 @@ void Server::uploadObj(int clientfd, const std::string &command) {
     fileMD.close();
 
     uint64_t partition = hashAndMap(fileName, power); // Find which partition the file is hashed to 
+    std::cout << fileName << " has been mapped to partition: " << partition << std::endl;
     std::string mainMachine = objectManager.partitionMap.lookup(partition); // Find the ipAddress of the machine the main copy will be store
     std::string backupMachine = objectManager.machineList.find(mainMachine)->next->ipAddress; // Find the ipAddress of the machine the back up copy will be stored
     std::cout << "Main copy of " << fileName << " should be stored in Machine with ipAddress " << mainMachine << std::endl;
@@ -210,8 +211,16 @@ void Server::uploadObj(int clientfd, const std::string &command) {
     transferObj(localFile, backupMachine + ":/tmp/" + user);
     transferObj(localFileMD, backupMachine + ":/tmp/" + user);
 
-    std::string listDir = "ls /tmp/stagingDir";
-    system(listDir.c_str());
+    // Clean up the saved file from local machine
+    std::string cleanUpFile = "rm " + localFile;
+    std::string cleanUpFileMD = "rm " + localFileMD;
+    system(cleanUpFile.c_str());
+    system(cleanUpFileMD.c_str());
+
+    std::string serverAck = "Server: Main copy of " + fileName + " saved to " + mainMachine + "\n";
+    serverAck += "Server: Backup copy of " + fileName + " saved to " + backupMachine + "\n";
+    send(clientfd, serverAck.c_str(), serverAck.length(), 0);
+
     return;
 }
 
@@ -243,7 +252,6 @@ int generateRandomPortNumber() {
     srand(time(NULL));
 	return rand() % (65535 - 1024 + 1) + 1024;
 }
-
 uint64_t hashAndMap(const std::string& str, int n) {
     // Hash the string using MD5
     unsigned char hash[MD5_DIGEST_LENGTH];
