@@ -32,7 +32,7 @@ private:
     int power;
     std::mutex mtx;
     void downloadObj();
-    void listUser();
+    void listUser(int clientfd, const std::string &command);
     void uploadObj(int clientfd, const std::string &command);
     void deleteObj();
     void addDisk();

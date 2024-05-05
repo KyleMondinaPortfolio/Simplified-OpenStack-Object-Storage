@@ -103,7 +103,7 @@ void Server::handleClient(int clientfd) {
             downloadObj();
             continue;
         } else if (firstWord == "list") {
-            listUser();
+            listUser(clientfd, command);
             continue;
         } else if (firstWord == "upload") {
             uploadObj(clientfd, command);
@@ -133,10 +133,46 @@ void Server::downloadObj() {
     std::cout << "Download command" << std::endl;
 }
 
-void Server::listUser() {
+void Server::listUser(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received list command from client " << clientfd << std::endl;
+    
+    size_t space = command.find(" ");
+    std::string user = command.substr(space+1);
 
-    std::cout << "List command" << std::endl;
+    int objCount = 0;
+    std::set<std::string> serverSet; // The set of servers that have user object files
+
+    for (const auto &pair:objectManager.mainCopies) {
+        for (const auto &fileObj: pair.second) {
+            if (fileObj.user == user) {
+                objCount += 1;
+                serverSet.insert(pair.first);
+            }
+        }
+    }
+
+    for (const auto &pair:objectManager.backupCopies) {
+        for (const auto &fileObj: pair.second) {
+            if (fileObj.user == user) {
+                objCount += 1;
+                serverSet.insert(pair.first);
+            }
+        }
+    }
+
+    if (objCount == 0) {
+        std::string serverResponse = user + " has no objects in the database";
+        send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+        return;
+    }
+
+    std::cout << "what is obj: " << objCount << std::endl;
+    std::string serverResponse = "total " + std::to_string(objCount) + "\n";
+    for (const auto &server: serverSet) {
+        serverResponse += listDirectory(server, user);
+    }
+    send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
 }
 
 void Server::uploadObj(int clientfd, const std::string &command) {

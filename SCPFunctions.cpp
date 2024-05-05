@@ -45,3 +45,30 @@ bool transferObj(const std::string &src, const std::string &dest) {
         return false;
     }
 }
+
+std::string listDirectory(const std::string& ipAddress, const std::string& user) {
+    // SSH command
+    std::string command = "ssh " + ipAddress + " 'ls -lrt /tmp/kmondina/" + user + "'";
+
+    // Open a pipe to the command
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        std::cerr << "Error: popen failed!" << std::endl;
+        return "";
+    }
+
+    // Read the output into a string
+    std::string result;
+    char buffer[128];
+    while (!feof(pipe)) {
+        if (fgets(buffer, 128, pipe) != nullptr)
+            result += buffer;
+    }
+
+    // Close the pipe
+    pclose(pipe);
+    // Remove the header e.g : "total: count"
+    size_t dash = result.find("-");
+    result = result.substr(dash);
+    return result + "\n";
+}

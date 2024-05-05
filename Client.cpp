@@ -63,7 +63,7 @@ void Client::run() {
 		if (firstWord == "download") {
 			downloadObj();
 		} else if (firstWord == "list") {
-			listUser();
+			listUser(command);
 		} else if (firstWord == "upload") {
 			uploadObj(command);
 		} else if (firstWord == "delete") {
@@ -86,9 +86,16 @@ void Client::downloadObj() {
 	send(sockfd, test.c_str(), test.length(), 0);
 }
 
-void Client::listUser() {
-	std::string test = "list ";
-	send(sockfd, test.c_str(), test.length(), 0);
+void Client::listUser(const std::string &command) {
+	send(sockfd, command.c_str(), command.length(), 0);
+
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
 }
 
 void Client::uploadObj(const std::string &command) {
