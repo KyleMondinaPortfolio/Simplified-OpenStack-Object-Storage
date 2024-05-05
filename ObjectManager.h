@@ -24,7 +24,7 @@ public:
     std::string listUser();
     std::string uploadObj();
     std::string deleteObj();
-    std::string addDisk();
+    std::string addDisk(const std::string &ipAddress);
     std::string removeDisk();
     MachineList machineList;
     PartitionMap partitionMap;
