@@ -20,8 +20,8 @@ ObjectManager::ObjectManager(const std::vector<std::string> &ipAddresses, uint64
 
     // Initialize the main copies and backup copies maps
     for (const auto& server : servers) {
-            mainCopies[server] = std::vector<FileObject>();
-            backupCopies[server] = std::vector<FileObject>();
+        mainCopies[server] = std::vector<FileObject>();
+        backupCopies[server] = std::vector<FileObject>();
     }
 }
 
