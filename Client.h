@@ -29,7 +29,7 @@ private:
     void uploadObj(const std::string &command);
     void deleteObj();
     void addDisk(const std::string &command);
-    void removeDisk();
+    void removeDisk(const std::string &command);
     void cleanDisks(const std::string &command);
     void displayHelp();
     std::string resolveHostname(const std::string &hostname);

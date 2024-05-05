@@ -72,7 +72,7 @@ void Client::run() {
 		} else if (firstWord == "add") {
 			addDisk(command);
 		} else if (firstWord == "remove") {
-			removeDisk();
+			removeDisk(command);
 		} else if (firstWord == "clean") {
 			cleanDisks(command);
 		} else {
@@ -189,9 +189,15 @@ void Client::addDisk(const std::string &command) {
 	std::cout << buffer << std::endl;
 }
 
-void Client::removeDisk() {
-	std::string test = "remove ";
-	send(sockfd, test.c_str(), test.length(), 0);
+void Client::removeDisk(const std::string &command) {
+	send(sockfd, command.c_str(), command.length(), 0);
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
 }
 
 void Client::cleanDisks(const std::string &command) {

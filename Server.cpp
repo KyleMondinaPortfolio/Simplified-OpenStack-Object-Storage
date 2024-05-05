@@ -115,7 +115,7 @@ void Server::handleClient(int clientfd) {
             addDisk(clientfd, command);
             continue;
         } else if (firstWord == "remove") {
-            removeDisk();
+            removeDisk(clientfd, command);
             continue;
         } else if (firstWord == "clean") {
             cleanDisks(clientfd, command);
@@ -273,7 +273,7 @@ void Server::deleteObj() {
 
 void Server::addDisk(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
-    std::cout << "Received upload command from client " << clientfd << std::endl;
+    std::cout << "Received add command from client " << clientfd << std::endl;
 
     size_t space = command.find(" ");
     std::string ipAddress = command.substr(space+1);
@@ -291,10 +291,24 @@ void Server::addDisk(int clientfd, const std::string &command) {
     return;
 }
 
-void Server::removeDisk() {
+void Server::removeDisk(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received remove command from client " << clientfd << std::endl;
 
-    std::cout << "Remove command" << std::endl;
+    size_t space = command.find(" ");
+    std::string ipAddress = command.substr(space+1);
+
+    auto it = objectManager.servers.find(ipAddress);
+    if (it == objectManager.servers.end()) {
+        std::string serverResponse = ipAddress + " is not present in the database\n";
+        std::cout << serverResponse << std::endl;
+        send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+        return;
+    }
+
+    std::string serverResponse = "IP Address present in the database";
+    send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+    return;
 }
 
 void Server::cleanDisks(int clientfd, const std::string &command) {

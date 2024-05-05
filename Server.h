@@ -37,7 +37,7 @@ private:
     void uploadObj(int clientfd, const std::string &command);
     void deleteObj();
     void addDisk(int clientfd, const std::string &command);
-    void removeDisk();
+    void removeDisk(int clientfd, const std::string &command);
     void cleanDisks(int clientfd, const std::string &command);
 };
 
