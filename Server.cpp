@@ -231,7 +231,7 @@ uint64_t hashAndMap(const std::string& str, int n) {
     return hashValue % range;
 }
 
-std::string calculateMD5(const std::string& filename) {
+std::string createDigitalSignature(const std::string& filename) {
     MD5_CTX md5Context;
     unsigned char digest[MD5_DIGEST_LENGTH];
     char buffer[4096];
