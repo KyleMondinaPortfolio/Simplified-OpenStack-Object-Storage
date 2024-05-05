@@ -64,6 +64,7 @@ std::string ObjectManager::addDisk(const std::string &ipAddress) {
 
     for (auto &pair: mainCopies) {
         std::cout << "in Machine " << pair.first << std::endl;
+        newMainCopies[pair.first] = std::vector<FileObject>();
         for (auto &fileObj: pair.second) {
             std::cout << "looking at " << fileObj.fileName << std::endl;
             std::string fileName = fileObj.fileName;
@@ -84,13 +85,18 @@ std::string ObjectManager::addDisk(const std::string &ipAddress) {
                 std::string fileStatus = fileName + " transfered from " + pair.first + " to " + correctMachine + "\n";
                 std::cout << fileStatus << std::endl;
                 serverResponse += fileStatus;
+            } else {
+                newMainCopies[pair.first].push_back(fileObj);
             }
-            newMainCopies[pair.first].push_back(fileObj);
         }
     }
     mainCopies = newMainCopies;
     std::cout << "Main copy to server mappings after addition: " << std::endl;
     serverResponse += "Main copy to server mappings after addition: \n";
+    auto m_it = mainCopies.find(ipAddress);
+    if (m_it == mainCopies.end()) {
+        mainCopies[ipAddress] = std::vector<FileObject>();
+    } 
     serverResponse += printMapping(mainCopies);
 
 
@@ -101,6 +107,8 @@ std::string ObjectManager::addDisk(const std::string &ipAddress) {
 
     for (auto &pair: backupCopies) {
         std::cout << "in Machine " << pair.first << std::endl;
+        newBackupCopies[pair.first] = std::vector<FileObject>();
+
         for (auto &fileObj: pair.second) {
             std::cout << "looking at " << fileObj.fileName << std::endl;
             std::string fileName = fileObj.fileName;
@@ -116,6 +124,10 @@ std::string ObjectManager::addDisk(const std::string &ipAddress) {
                 createDir(correctMachine, "/tmp/kmondina/" + user);
                 transferObj(pair.first + ":/tmp/kmondina/" + user + "/" + fileName, correctMachine + ":/tmp/kmondina/" + user + "/" + fileName);
                 transferObj(pair.first + ":/tmp/kmondina/" + user + "/." + fileName, correctMachine + ":/tmp/kmondina/" + user + "/" + fileName);
+                std::string filePath = "/tmp/kmondina/" + user + "/" + fileName;
+                std::string fileMD = "/tmp/kmondina/" + user + "/." + fileName;
+                sshDeleteObj(pair.first, filePath);
+                sshDeleteObj(pair.first, fileMD);
 
                 newBackupCopies[correctMachine].push_back(fileObj);
 
@@ -123,12 +135,18 @@ std::string ObjectManager::addDisk(const std::string &ipAddress) {
                 std::cout << fileStatus << std::endl;
                 serverResponse += fileStatus;
             }
-            newBackupCopies[pair.first].push_back(fileObj);
+            else {
+                newBackupCopies[pair.first].push_back(fileObj);
+            }
         }
     }
     backupCopies = newBackupCopies;
     std::cout << "Backup copy to server mappings after addition: " << std::endl;
     serverResponse += "Backup copy to server mappings after addition: \n";
+    auto b_it = backupCopies.find(ipAddress);
+    if (b_it == backupCopies.end()) {
+        backupCopies[ipAddress] = std::vector<FileObject>();
+    } 
     serverResponse += printMapping(backupCopies);
     return serverResponse;
 }

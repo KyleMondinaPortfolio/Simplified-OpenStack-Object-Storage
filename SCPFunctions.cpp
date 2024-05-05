@@ -33,6 +33,19 @@ bool deleteDir(const std::string &ipAddress, const std::string &directory) {
     }
 }
 
+bool sshDeleteObj(const std::string &ipAddress, const std::string &filePath) {
+    std::string command = "ssh " + ipAddress + " 'rm  " + filePath + "'";
+    
+    int result = system(command.c_str());
+    if (result == 0) {
+        std::cout << ipAddress << ":" + filePath+ " successfully deleted" << std::endl;
+        return true;
+    } else {
+        std::cout <<  "Failed to delete " << ipAddress << ":" + filePath  << std::endl;
+        return false;
+    }
+}
+
 bool transferObj(const std::string &src, const std::string &dest) {
     std::string command = "scp " + src + " " + dest;
 

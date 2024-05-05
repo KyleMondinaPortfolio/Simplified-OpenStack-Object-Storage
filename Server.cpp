@@ -281,6 +281,8 @@ void Server::addDisk(int clientfd, const std::string &command) {
     auto it = objectManager.servers.find(ipAddress);
     if (it != objectManager.servers.end()) {
         std::string serverResponse = ipAddress + " already present in the database\n";
+        std::cout << serverResponse << std::endl;
+        send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
         return;
     }
 
