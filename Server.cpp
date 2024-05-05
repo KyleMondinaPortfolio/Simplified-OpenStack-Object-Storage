@@ -112,7 +112,7 @@ void Server::handleClient(int clientfd) {
             deleteObj();
             continue;
         } else if (firstWord == "add") {
-            addDisk();
+            addDisk(clientfd, command);
             continue;
         } else if (firstWord == "remove") {
             removeDisk();
@@ -167,9 +167,9 @@ void Server::listUser(int clientfd, const std::string &command) {
         return;
     }
 
-    std::cout << "what is obj: " << objCount << std::endl;
     std::string serverResponse = "total " + std::to_string(objCount) + "\n";
     for (const auto &server: serverSet) {
+        std::cout << server << std::endl;
         serverResponse += listDirectory(server, user);
     }
     send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
@@ -271,10 +271,91 @@ void Server::deleteObj() {
     std::cout << "Delete command" << std::endl;
 }
 
-void Server::addDisk() {
+void Server::addDisk(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received upload command from client " << clientfd << std::endl;
 
-    std::cout << "Add command" << std::endl;
+    size_t space = command.find(" ");
+    std::string ipAddress = command.substr(space+1);
+
+    objectManager.partitionMap.add(ipAddress); 
+    objectManager.machineList.insert(ipAddress);
+    objectManager.machineCount += 1;
+    objectManager.servers.insert(ipAddress);
+
+    std::string serverResponse;
+    std::map<std::string, std::vector<FileObject>> newMainCopies;
+    std::cout << "Main mappings before: " << std::endl;
+    objectManager.printMapping(objectManager.mainCopies);
+    for (auto &pair: objectManager.mainCopies) {
+        std::cout << "in Machine " << pair.first << std::endl;
+        for (auto &fileObj: pair.second) {
+            std::cout << "looking at " << fileObj.fileName << std::endl;
+            std::string fileName = fileObj.fileName;
+            std::string user = fileObj.user;
+            std::string correctMachine = objectManager.partitionMap.lookup(fileObj.partition);
+            if (pair.first != correctMachine) {
+                // The file object needs to be transfered
+                std::cout << fileName << " needs to be moved to " << correctMachine << std::endl;
+
+                // Transfer the file
+                createDir(correctMachine, "/tmp/kmondina");
+                createDir(correctMachine, "/tmp/kmondina/" + user);
+                transferObj(pair.first + ":/tmp/kmondina/" + user + "/" + fileName, correctMachine + ":/tmp/kmondina/" + user + "/" + fileName);
+                transferObj(pair.first + ":/tmp/kmondina/" + user + "/." + fileName, correctMachine + ":/tmp/kmondina/" + user + "/" + fileName);
+
+                newMainCopies[correctMachine].push_back(fileObj);
+
+                std::string fileStatus = fileName + " transfered from " + pair.first + " to " + correctMachine + "\n";
+                std::cout << fileStatus << std::endl;
+                serverResponse += fileStatus;
+            }
+            newMainCopies[pair.first].push_back(fileObj);
+        }
+    }
+    objectManager.mainCopies = newMainCopies;
+    std::cout << "Main mappings after: " << std::endl;
+    objectManager.printMapping(objectManager.mainCopies);
+
+    std::cout << "Backup mappings before: " << std::endl;
+    objectManager.printMapping(objectManager.backupCopies);
+    std::vector<FileObject> newCopyVector;
+    for (auto &pair: objectManager.backupCopies) {
+        for (auto &fileObj: pair.second) {
+            std::string fileName = fileObj.fileName;
+            std::string user = fileObj.user;
+            std::string mainMachine = objectManager.partitionMap.lookup(fileObj.partition);
+            std::string correctMachine = objectManager.machineList.find(mainMachine)->next->ipAddress; // Find the ipAddress of the machine the back up copy will be stored
+            if (pair.first != correctMachine) {
+                // The file object needs to be transfered
+
+                // Transfer the file
+                createDir(correctMachine, "/tmp/kmondina");
+                createDir(correctMachine, "/tmp/kmondina/" + user);
+                transferObj(pair.first + ":/tmp/kmondina/" + user + "/" + fileName, correctMachine + ":/tmp/kmondina/" + user + "/" + fileName);
+                transferObj(pair.first+ ":/tmp/kmondina/" + user + "/." + fileName, correctMachine + ":/tmp/kmondina/" + user + "/" + fileName);
+
+                // Update the mapping
+                auto it = std::find(pair.second.begin(), pair.second.end(), fileObj);
+                pair.second.erase(it);
+
+                std::string fileStatus = fileName + " transfered from " + pair.first + " to " + correctMachine + "\n";
+                std::cout << fileStatus << std::endl;
+                serverResponse += fileStatus;
+
+                if (correctMachine == ipAddress) {
+                    newCopyVector.push_back(fileObj);
+                } else {
+                    objectManager.backupCopies[correctMachine].push_back(fileObj);
+                }
+            }
+        }
+    }
+    objectManager.backupCopies[ipAddress] = newCopyVector;
+    std::cout << "Backup mappings after: " << std::endl;
+    objectManager.printMapping(objectManager.backupCopies);
+
+    send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
 }
 
 void Server::removeDisk() {
@@ -343,3 +424,4 @@ std::string createDigitalSignature(const std::string& filename) {
 
     return ss.str();
 }
+

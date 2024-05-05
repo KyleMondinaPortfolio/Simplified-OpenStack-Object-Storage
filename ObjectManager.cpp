@@ -61,3 +61,22 @@ std::string ObjectManager::removeDisk() {
     return test;
 }
 
+std::string ObjectManager::printMapping(const std::map<std::string, std::vector<FileObject>> &mapping) {
+    std::string display;
+    for (const auto& pair : mapping) {
+        const std::string& key = pair.first;  // Key of the map
+        const std::vector<FileObject>& files = pair.second;  // Corresponding vector of FileObjects
+        // Print the key (string)
+        std::cout << "Machine: " << key << std::endl;
+        display += "Machine: " + key + "\n";
+        // Iterate over the vector of FileObjects
+        for (const auto& file : files) {
+            // Print each fileName
+            std::cout << file.fileName << std::endl;
+            display += file.fileName + "\n";
+        }
+    }
+    return display;
+}
+
+

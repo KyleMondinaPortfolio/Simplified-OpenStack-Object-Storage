@@ -28,7 +28,7 @@ private:
     void listUser(const std::string &command);
     void uploadObj(const std::string &command);
     void deleteObj();
-    void addDisk();
+    void addDisk(const std::string &command);
     void removeDisk();
     void cleanDisks(const std::string &command);
     void displayHelp();

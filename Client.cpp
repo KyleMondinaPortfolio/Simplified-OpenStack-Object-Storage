@@ -1,4 +1,5 @@
 #include "Client.h"
+#include "SCPFunctions.h"
 
 Client::Client(const std::string &userIp, int port) 
     : userIp(userIp), port(port) 
@@ -69,7 +70,7 @@ void Client::run() {
 		} else if (firstWord == "delete") {
 			deleteObj();
 		} else if (firstWord == "add") {
-			addDisk();
+			addDisk(command);
 		} else if (firstWord == "remove") {
 			removeDisk();
 		} else if (firstWord == "clean") {
@@ -166,9 +167,26 @@ void Client::deleteObj() {
 	send(sockfd, test.c_str(), test.length(), 0);
 }
 
-void Client::addDisk() {
-	std::string test = "add ";
-	send(sockfd, test.c_str(), test.length(), 0);
+void Client::addDisk(const std::string &command) {
+	size_t space = command.find(" ");
+	std::string ipAddress = command.substr(space+1);
+
+	bool validIp = testConnection(ipAddress);
+	if (!validIp) {
+		std::cout << "Cannot connect to " << ipAddress << std::endl;
+		std::cout << "Provide a machine you can connect to " << std::endl;
+		return;
+	}
+
+	send(sockfd, command.c_str(), command.length(), 0);
+
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
 }
 
 void Client::removeDisk() {

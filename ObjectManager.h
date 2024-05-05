@@ -12,6 +12,9 @@ public:
     std::string ds;
     uint64_t partition;
     FileObject(std::string fileName, std::string user, std::string ds, uint64_t partition): fileName(fileName), user(user), ds(ds), partition(partition) {}
+    bool operator==(const FileObject& other) const {
+        return fileName == other.fileName;
+    }
 };
 
 class ObjectManager {
@@ -28,6 +31,7 @@ public:
     std::set<std::string> servers;
     std::map<std::string, std::vector<FileObject>> mainCopies;
     std::map<std::string, std::vector<FileObject>> backupCopies;
+    std::string printMapping(const std::map<std::string, std::vector<FileObject>> &mapping);
     int machineCount;
 };
 

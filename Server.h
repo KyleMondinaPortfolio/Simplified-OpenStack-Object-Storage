@@ -14,6 +14,7 @@
 #include <iostream>
 #include <openssl/md5.h>
 #include <iomanip>
+#include <algorithm>
 
 
 class Server {
@@ -35,7 +36,7 @@ private:
     void listUser(int clientfd, const std::string &command);
     void uploadObj(int clientfd, const std::string &command);
     void deleteObj();
-    void addDisk();
+    void addDisk(int clientfd, const std::string &command);
     void removeDisk();
     void cleanDisks(int clientfd, const std::string &command);
 };
@@ -43,5 +44,4 @@ private:
 int generateRandomPortNumber();
 uint64_t hashAndMap(const std::string& str, int n);
 std::string createDigitalSignature(const std::string& filename);
-
 #endif /* SERVER_H */
