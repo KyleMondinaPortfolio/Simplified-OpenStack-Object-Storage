@@ -204,12 +204,12 @@ void Server::uploadObj(int clientfd, const std::string &command) {
     objectManager.backupCopies[backupMachine].push_back(fileObj);
 
     // Transfer the file and its metadata to the appropriate machines
-    createDir(mainMachine, "/tmp/" + user);
-    createDir(backupMachine, "/tmp/" + user);
-    transferObj(localFile, mainMachine + ":/tmp/" + user);
-    transferObj(localFileMD, mainMachine + ":/tmp/" + user);
-    transferObj(localFile, backupMachine + ":/tmp/" + user);
-    transferObj(localFileMD, backupMachine + ":/tmp/" + user);
+    createDir(mainMachine, "/tmp/kmondina/" + user);
+    createDir(backupMachine, "/tmp/kmondina/" + user);
+    transferObj(localFile, mainMachine + ":/tmp/kmondina/" + user);
+    transferObj(localFileMD, mainMachine + ":/tmp/kmondina/" + user);
+    transferObj(localFile, backupMachine + ":/tmp/kmondina/" + user);
+    transferObj(localFileMD, backupMachine + ":/tmp/kmondina/" + user);
 
     // Clean up the saved file from local machine
     std::string cleanUpFile = "rm " + localFile;
