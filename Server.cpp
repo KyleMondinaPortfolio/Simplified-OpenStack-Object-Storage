@@ -1,7 +1,7 @@
 #include "Server.h"
 
 Server::Server(const std::vector<std::string>& ipAddresses, int power)
-    : ipAddresses(ipAddresses), power(power)
+    : ipAddresses(ipAddresses), power(power), objectManager(ipAddresses, power)
 {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1) {
@@ -46,6 +46,8 @@ Server::Server(const std::vector<std::string>& ipAddresses, int power)
             Ipresult += Ipbuffer;
     }
     pclose(pipe);
+
+    objectManager.machineList.display();
 
     std::cout << "Server succesfully initialized! To run client, type ./Client " << Ipresult << " " << port << std::endl;
 

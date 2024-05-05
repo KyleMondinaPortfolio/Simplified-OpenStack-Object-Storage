@@ -3,13 +3,14 @@
 
 #include "MachineList.h"
 #include "PartitionMap.h"
+#include <set>
 
 class FileObject {
 public:
     std::string fileName;
     uint64_t partition;
     FileObject(std::string fileName, uint64_t partition): fileName(fileName), partition(partition) {}
-}
+};
 
 class ObjectManager {
 public:
@@ -20,12 +21,14 @@ public:
     std::string deleteObj();
     std::string addDisk();
     std::string removeDisk();
-private:
     MachineList machineList;
+
+private:
+    std::set<std::string> servers;
     PartitionMap partitionMap;
     std::map<std::string, std::vector<FileObject>> mainCopies;
     std::map<std::string, std::vector<FileObject>> backupCopies;
     int machineCount;
-}
+};
 
 #endif /* OBJECT_MANAGER_H*/

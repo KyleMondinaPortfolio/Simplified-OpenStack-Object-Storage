@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
         ipAddresses.push_back(argv[i]);
     }
 
+
+
     Server server(ipAddresses, power);
     std::thread serverThread([&](){
         server.acceptClients();
@@ -25,7 +27,6 @@ int main(int argc, char *argv[]) {
 
     Client client ("127.0.0.1", server.port);
     std::thread clientThread([&](){
-        std::cout << "test" << std::endl;
         client.run();
     });
 

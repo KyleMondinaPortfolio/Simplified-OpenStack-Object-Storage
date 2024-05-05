@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include "networkHeaders.h"
+#include "ObjectManager.h"
 #include <thread>
 #include <mutex>
 #include <vector>
@@ -19,6 +20,8 @@ public:
     Server(const std::vector<std::string>& ipAddresses, int power);
     void acceptClients();
     void handleClient(int clientfd);
+    ObjectManager objectManager;
+
 
 private:
     struct sockaddr_in serverAddress;

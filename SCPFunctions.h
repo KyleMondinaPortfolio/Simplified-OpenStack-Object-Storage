@@ -28,7 +28,11 @@ bool transferObj(const std::string &src, const std::string &dest) {
 
     int result = system(command.c_str());
     if (result == 0) {
-        std::c
+        std::cout << "File transfer from " << src << " to " << dest << " succeeded!" << std::endl;
+        return true;
+    } else {
+        std::cout << "File transfer from " << src << " to " << dest << " failed!" << std::endl;
+        return false;
     }
 }
 

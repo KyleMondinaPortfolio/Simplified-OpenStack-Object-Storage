@@ -3,14 +3,14 @@ CFLAGS=-I.
 CPPFLAGS=-std=c++11
 LIBS=-lssl -lcrypto  # OpenSSL libraries
 TARGETS=Test Server Client
-OBJECTS=MachineList.o PartitionMap.o Server.o server.o client.o main.o
+OBJECTS=MachineList.o PartitionMap.o ObjectManager.o Server.o Client.o server.o main.o
 
 all: $(TARGETS)
 
-Test: main.o MachineList.o PartitionMap.o Server.o
+Test: main.o MachineList.o PartitionMap.o ObjectManager.o Server.o
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBS)
 
-Server: server.o Server.o Client.o
+Server: server.o Server.o Client.o ObjectManager.o MachineList.o PartitionMap.o
 	$(CC) $(CPPFLAGS) -o $@ $^ $(LIBS)
 
 Client: client.o Client.o
