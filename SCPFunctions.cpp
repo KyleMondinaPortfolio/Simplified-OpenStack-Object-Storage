@@ -20,6 +20,19 @@ bool createDir(const std::string &ipAddress, const std::string &directory) {
     }
 }
 
+bool deleteDir(const std::string &ipAddress, const std::string &directory) {
+    std::string command = "ssh " + ipAddress + " 'rm -r " + directory + "'";
+    
+    int result = system(command.c_str());
+    if (result == 0) {
+        std::cout << ipAddress << ":" + directory + " successfully deleted" << std::endl;
+        return true;
+    } else {
+        std::cout <<  "Failed to delete " << ipAddress << ":" + directory  << std::endl;
+        return false;
+    }
+}
+
 bool transferObj(const std::string &src, const std::string &dest) {
     std::string command = "scp " + src + " " + dest;
 

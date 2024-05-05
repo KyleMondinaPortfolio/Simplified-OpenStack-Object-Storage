@@ -118,7 +118,7 @@ void Server::handleClient(int clientfd) {
             removeDisk();
             continue;
         } else if (firstWord == "clean") {
-            cleanDisks();
+            cleanDisks(clientfd, command);
             continue;
         } else {
             continue;
@@ -203,9 +203,13 @@ void Server::uploadObj(int clientfd, const std::string &command) {
     objectManager.mainCopies[mainMachine].push_back(fileObj);
     objectManager.backupCopies[backupMachine].push_back(fileObj);
 
-    // Transfer the file and its metadata to the appropriate machines
+    // Initialize the directories in the remote machines, will fail if they already exist
+    createDir(mainMachine, "/tmp/kmondina");
+    createDir(backupMachine, "/tmp/kmondina");
     createDir(mainMachine, "/tmp/kmondina/" + user);
     createDir(backupMachine, "/tmp/kmondina/" + user);
+
+    // Transfer the file and its metadata to the appropriate machines
     transferObj(localFile, mainMachine + ":/tmp/kmondina/" + user);
     transferObj(localFileMD, mainMachine + ":/tmp/kmondina/" + user);
     transferObj(localFile, backupMachine + ":/tmp/kmondina/" + user);
@@ -242,10 +246,17 @@ void Server::removeDisk() {
     std::cout << "Remove command" << std::endl;
 }
 
-void Server::cleanDisks() {
+void Server::cleanDisks(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
 
-    std::cout << "Clean command" << std::endl;
+    std::string serverAck = "Server: \n";
+    for (const auto &server: objectManager.servers) {
+        deleteDir(server, "/tmp/kmondina");
+        serverAck += server + " cleared";
+    }
+
+    send(clientfd, serverAck.c_str(), serverAck.length(), 0);
+    return;
 }
 
 int generateRandomPortNumber() {

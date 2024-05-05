@@ -37,7 +37,7 @@ private:
     void deleteObj();
     void addDisk();
     void removeDisk();
-    void cleanDisks();
+    void cleanDisks(int clientfd, const std::string &command);
 };
 
 int generateRandomPortNumber();

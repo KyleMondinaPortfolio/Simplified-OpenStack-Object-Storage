@@ -73,7 +73,7 @@ void Client::run() {
 		} else if (firstWord == "remove") {
 			removeDisk();
 		} else if (firstWord == "clean") {
-			cleanDisks();
+			cleanDisks(command);
 		} else {
 			displayHelp();
 		}
@@ -169,9 +169,17 @@ void Client::removeDisk() {
 	send(sockfd, test.c_str(), test.length(), 0);
 }
 
-void Client::cleanDisks() {
-	std::string test = "clean ";
-	send(sockfd, test.c_str(), test.length(), 0);
+void Client::cleanDisks(const std::string &command) {
+	send(sockfd, command.c_str(), command.length(), 0);
+
+	// Receive server acknowledgement
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
 }
 
 void Client::displayHelp() {

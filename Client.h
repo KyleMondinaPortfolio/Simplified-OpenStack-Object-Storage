@@ -30,7 +30,7 @@ private:
     void deleteObj();
     void addDisk();
     void removeDisk();
-    void cleanDisks();
+    void cleanDisks(const std::string &command);
     void displayHelp();
     std::string resolveHostname(const std::string &hostname);
 };
