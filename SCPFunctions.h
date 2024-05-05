@@ -10,15 +10,15 @@ bool testConnection(const std::string &ipAddress) {
     return result == 0;
 }
 
-bool createTmpDir(const std::string &ipAddress) {
-    std::string command = "ssh " + ipAddress + " 'mkdir /tmp/kmondina && chmod 777 /tmp/kmondina'";
+bool createDir(const std::string &ipAddress, const std::string &directory) {
+    std::string command = "ssh " + ipAddress + " 'mkdir " + directory + "  && chmod 777 " + directory + "'";
     
     int result = system(command.c_str());
     if (result == 0) {
-        std::cout << ipAddress << ":/tmp/kmondina successfully created with 777 permissions" << std::endl;
+        std::cout << ipAddress << ":" + directory + " successfully created with 777 permissions" << std::endl;
         return true;
     } else {
-        std::cout <<  "Failed to create " << ipAddress << ":/tmp/kmondina with 777 permissions" << std::endl;
+        std::cout <<  "Failed to create " << ipAddress << ":" + directory + " with 777 permissions" << std::endl;
         return false;
     }
 }
