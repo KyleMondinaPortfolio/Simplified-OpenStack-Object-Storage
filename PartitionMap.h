@@ -28,7 +28,7 @@ public:
     std::string lookup(uint64_t partition);
     bool add(const std::string &ipAddress);
     bool remove(const std::string &ipAddress);
-    void display();
+    std::string display();
     
 private:
     std::map<std::vector<Range>, std::string> partitionMap;

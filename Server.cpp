@@ -305,8 +305,15 @@ void Server::removeDisk(int clientfd, const std::string &command) {
         send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
         return;
     }
+    
+    if (objectManager.machineCount <= 2) {
+        std::string serverResponse = "Unable to remove machine, database needs at least two machines";
+        std::cout << serverResponse << std::endl;
+        send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+        return;
+    }
 
-    std::string serverResponse = "IP Address present in the database";
+    std::string serverResponse = objectManager.removeDisk(ipAddress);
     send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
     return;
 }

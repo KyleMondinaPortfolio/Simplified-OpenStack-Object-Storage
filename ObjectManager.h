@@ -25,7 +25,7 @@ public:
     std::string uploadObj();
     std::string deleteObj();
     std::string addDisk(const std::string &ipAddress);
-    std::string removeDisk();
+    std::string removeDisk(const std::string &ipAddress);
     MachineList machineList;
     PartitionMap partitionMap;
     std::set<std::string> servers;

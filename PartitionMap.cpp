@@ -107,7 +107,7 @@ bool PartitionMap::remove(const std::string &ipAddress) {
 
 }
 
-void PartitionMap::display() {
+std::string PartitionMap::display() {
     std::ostringstream oss;
     oss << "PartitionMap:\n";
     for (const auto& pair : partitionMap) {
@@ -118,6 +118,7 @@ void PartitionMap::display() {
         oss << "]\n";
     }
     std::cout << oss.str() << std::endl;
+    return oss.str();
 }
 
 // Utility Functions
