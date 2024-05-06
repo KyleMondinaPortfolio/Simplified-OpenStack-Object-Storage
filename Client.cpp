@@ -85,6 +85,11 @@ void Client::run() {
 void Client::downloadObj(const std::string &command) {
 	send(sockfd, command.c_str(), command.length(), 0);
 
+	size_t space = command.find(" ");
+	std::string fileObject = command.substr(space+1);
+	size_t slash = fileObject.find("/");
+	std::string fileName = fileObject.substr(slash+1);
+
 	char buffer[BUFFER_SIZE] = {0};
 	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
 	if (bytesReceived < 0){
@@ -92,13 +97,51 @@ void Client::downloadObj(const std::string &command) {
 		return;
 	}
 
-	if (buffer == "Server: requested object not found") {
+	std::string objectFound(buffer);
+	if (objectFound == "Server: requested object not found") {
 		std::cout << buffer << std::endl;
+		std::cout << "Please ask for a valid file" << std::endl;
 		return;
 	}
-	
-	// Buffer contains the file size
+	// Recieve object found status
 	std::cout << buffer << std::endl;
+
+	// Send client ack
+	std::string clientAck = "Client: request file size\n";
+	send(sockfd, clientAck.c_str(), clientAck.length(), 0);
+
+	// Receive the file contents
+	size_t fileSize;
+	bytesReceived = recv(sockfd, &fileSize, sizeof(fileSize), 0);
+	if (bytesReceived != sizeof(fileSize)) {
+		std::cerr << "Failed to receive file size from client" << std::endl;
+		return;
+	}
+
+	// Send Client ack
+	clientAck = "Client: received file size\n";
+	send(sockfd, clientAck.c_str(), clientAck.length(), 0);
+
+
+	// Receive file contents
+	std::ofstream outfile(fileName.c_str(), std::ios::binary);
+    memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	size_t totalReceived = 0;
+    while (totalReceived < fileSize) {
+        bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+        if (bytesReceived <= 0) {
+            std::cerr << "Failed to receive file data from client" << std::endl;
+            continue;
+        }
+        outfile.write(buffer, bytesReceived);
+        totalReceived += bytesReceived;
+    }
+	// Close the file!!! Very important!!!
+	outfile.close();
+
+	std::cout << "Recieved " << fileName << " from server" << std::endl;
+	std::string catCommand = "cat "	+ fileName;
+	system(catCommand.c_str());
 	return;
 }
 

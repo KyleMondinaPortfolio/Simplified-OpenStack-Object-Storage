@@ -147,7 +147,7 @@ void Server::downloadObj(int clientfd, const std::string &command) {
     std::string fileDS;
     bool objectFound = false;
     for (const auto &fileObj: objectManager.mainCopies[mainMachine]) {
-        if (fileObj.fileName == fileName) {
+        if (fileObj.fileName == fileName && fileObj.user == user) {
             objectFound = true;
             fileDS = fileObj.ds;
         }
@@ -155,7 +155,7 @@ void Server::downloadObj(int clientfd, const std::string &command) {
 
     std::string serverResponse;
     if (!objectFound) {
-        serverResponse = "Server: requested object not found\n";
+        serverResponse = "Server: requested object not found";
         std::cout << serverResponse << std::endl;
         send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
         return;
@@ -213,10 +213,48 @@ void Server::downloadObj(int clientfd, const std::string &command) {
         std::cout << "Backup copy uncorrupted!" << std::endl;
     }
 
+    std::string fileStatus = "Server: requested object found\n";
+    send(clientfd, fileStatus.c_str(), fileStatus.length(), 0);
+    char buffer[BUFFER_SIZE] = {0};
+    memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	int bytesReceived = recv(clientfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
 
-    serverResponse = "Server: requested object found\n";
-    std::cout << serverResponse << std::endl;
-    send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+    // File ready to be sent to the client
+    // Send the file size!
+    std::ifstream infile(localFile, std::ios::binary);
+    infile.seekg(0, std::ios::end);
+	size_t fileSize = infile.tellg();
+	infile.seekg(0, std::ios::beg);
+	send(clientfd, &fileSize, sizeof(fileSize), 0);
+
+    // Receive client ack
+    memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	bytesReceived = recv(clientfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
+
+    // Send to client file
+    memset(buffer, 0, sizeof(buffer)); // Clear the buffer before recieving messages
+	while (!infile.eof()) {
+		infile.read(buffer, BUFFER_SIZE);
+		int bytesRead = infile.gcount();
+		send(clientfd, buffer, bytesRead, 0);
+	}
+	infile.close();
+
+    // Clean up the saved file from local machine
+    std::string cleanUpFile = "rm " + localFile;
+    system(cleanUpFile.c_str());
+
+    std::cout << "Succesfully sent file " << fileObject << " to client" << std::endl;
     return;
 }
 
