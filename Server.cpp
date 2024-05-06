@@ -141,6 +141,7 @@ void Server::downloadObj(int clientfd, const std::string &command) {
     // Grab the ipAddress of the main copy
     uint64_t partition = hashAndMap(fileName, power);
     std::string mainMachine = objectManager.partitionMap.lookup(partition);
+    std::string backupMachine = objectManager.machineList.find(mainMachine)->next->ipAddress;
 
     // Grab the file object, if present
     std::string fileDS;
@@ -166,21 +167,27 @@ void Server::downloadObj(int clientfd, const std::string &command) {
     std::ofstream localMainFile(localFile);
     localMainFile.close();
     transferObj(mainMachine + ":/tmp/kmondina/" + fileObject, "/tmp/stagingDir/.");
-    std::cout << "Local file " << localFile << std::endl;
     std::string localMainDS = createDigitalSignature(localFile);
+    std::cout << "main original ds " << fileDS << std::endl;
+    std::cout << "main file ds " << localMainDS << std::endl;
 
-    std::cout << "origminal ds " << fileDS << std::endl;
-    std::cout << "file ds " << localMainDS << std::endl;
     if (localMainDS != fileDS) {
         std::cout << "Main copy corrupted!" << std::endl;
+        std::cout << "Restore main file using backup from " << backupMachine << std::endl;
         // Grab the file from and back up and copy it to localMainFile
+        transferObj(backupMachine + ":/tmp/kmondina/" + fileObject, mainMachine + ":/tmp/kmondina/" + fileObject);
+
+        // Perform check again
+        std::ofstream localMainFile(localFile);
+        localMainFile.close();
+        std::cout << "Checking the main copy ds after restoration:";
+        transferObj(mainMachine + ":/tmp/kmondina/" + fileObject, "/tmp/stagingDir/.");
+        std::string localMainDS = createDigitalSignature(localFile);
+        std::cout << "main original ds " << fileDS << std::endl;
+        std::cout << "main file ds " << localMainDS << std::endl;
+    } else {
+        std::cout << "Main copy uncorrupted!" << std::endl;
     }
-    std::cout << "Main copy uncorrupted" << std::endl;
-
-
-
-
-
 
 
     serverResponse = "Server: requested object found\n";
