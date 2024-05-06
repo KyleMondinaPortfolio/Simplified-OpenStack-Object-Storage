@@ -189,6 +189,30 @@ void Server::downloadObj(int clientfd, const std::string &command) {
         std::cout << "Main copy uncorrupted!" << std::endl;
     }
 
+    std::ofstream localCopyFile(localFile);
+    localCopyFile.close();
+    transferObj(backupMachine + ":/tmp/kmondina/" + fileObject, "/tmp/stagingDir/.");
+    std::string localCopyDS = createDigitalSignature(localFile);
+    std::cout << "copy original ds " << fileDS << std::endl;
+    std::cout << "copy file ds " << localCopyDS << std::endl;
+    if (localCopyDS != fileDS) {
+        std::cout << "Backup copy corrupted!" << std::endl;
+        std::cout << "Restore backup file using main from " << mainMachine << std::endl;
+        // Grab the file from and back up and copy it to localMainFile
+        transferObj(mainMachine + ":/tmp/kmondina/" + fileObject, backupMachine + ":/tmp/kmondina/" + fileObject);
+
+        // Perform check again
+        std::ofstream localCopyFile(localFile);
+        localCopyFile.close();
+        std::cout << "Checking the backup copy ds after restoration:";
+        transferObj(backupMachine + ":/tmp/kmondina/" + fileObject, "/tmp/stagingDir/.");
+        std::string localCopyDS = createDigitalSignature(localFile);
+        std::cout << "main original ds " << fileDS << std::endl;
+        std::cout << "main file ds " << localCopyDS << std::endl;
+    } else {
+        std::cout << "Backup copy uncorrupted!" << std::endl;
+    }
+
 
     serverResponse = "Server: requested object found\n";
     std::cout << serverResponse << std::endl;
