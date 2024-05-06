@@ -153,6 +153,8 @@ std::string ObjectManager::addDisk(const std::string &ipAddress) {
         backupCopies[ipAddress] = std::vector<FileObject>();
     } 
     serverResponse += printMapping(backupCopies);
+    serverResponse += "New Partition Map After disk addition:\n";
+    serverResponse += partitionMap.display();
     return serverResponse;
 }
 
