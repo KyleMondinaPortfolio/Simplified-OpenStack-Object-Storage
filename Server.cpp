@@ -159,6 +159,30 @@ void Server::downloadObj(int clientfd, const std::string &command) {
         send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
         return;
     }
+
+    // Download the main copy to the staging directory 
+    std::string localFile = "/tmp/stagingDir/" + fileName;
+    // Set the file intially blank, scp will overwrite it if it is 
+    std::ofstream localMainFile(localFile);
+    localMainFile.close();
+    transferObj(mainMachine + ":/tmp/kmondina/" + fileObject, "/tmp/stagingDir/.");
+    std::cout << "Local file " << localFile << std::endl;
+    std::string localMainDS = createDigitalSignature(localFile);
+
+    std::cout << "origminal ds " << fileDS << std::endl;
+    std::cout << "file ds " << localMainDS << std::endl;
+    if (localMainDS != fileDS) {
+        std::cout << "Main copy corrupted!" << std::endl;
+        // Grab the file from and back up and copy it to localMainFile
+    }
+    std::cout << "Main copy uncorrupted" << std::endl;
+
+
+
+
+
+
+
     serverResponse = "Server: requested object found\n";
     std::cout << serverResponse << std::endl;
     send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
@@ -384,30 +408,33 @@ uint64_t hashAndMap(const std::string& str, int n) {
     return hashValue % range;
 }
 
-std::string createDigitalSignature(const std::string& filename) {
-    MD5_CTX md5Context;
-    unsigned char digest[MD5_DIGEST_LENGTH];
-    char buffer[4096];
-
-    MD5_Init(&md5Context);
-
-    std::ifstream file(filename, std::ios::binary);
-    if (!file.is_open()) {
-        std::cerr << "Error opening file: " << filename << std::endl;
+std::string createDigitalSignature(const std::string& filePath) {
+    std::ifstream file(filePath.c_str(), std::ios::binary); // Convert to C-style string
+    if (!file) {
+        std::cerr << "Error opening file: " << filePath << std::endl;
         return "";
     }
 
-    while (file.read(buffer, sizeof(buffer))) {
-        MD5_Update(&md5Context, buffer, file.gcount());
-    }
+    MD5_CTX mdContext;
+    MD5_Init(&mdContext);
 
-    MD5_Final(digest, &md5Context);
+    const int bufferSize = 1024;
+    char buffer[bufferSize];
+    while (file.good()) {
+        file.read(buffer, bufferSize);
+        MD5_Update(&mdContext, buffer, file.gcount());
+    }
+    file.close();
+
+    unsigned char hash[MD5_DIGEST_LENGTH];
+    MD5_Final(hash, &mdContext);
 
     std::stringstream ss;
-    for (int i = 0; i < MD5_DIGEST_LENGTH; ++i) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
+    ss << std::hex << std::setfill('0');
+    for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+        ss << std::setw(2) << static_cast<unsigned>(hash[i]);
     }
-
     return ss.str();
+
 }
 
