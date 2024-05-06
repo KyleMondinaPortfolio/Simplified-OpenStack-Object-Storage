@@ -68,7 +68,7 @@ void Client::run() {
 		} else if (firstWord == "upload") {
 			uploadObj(command);
 		} else if (firstWord == "delete") {
-			deleteObj();
+			deleteObj(command);
 		} else if (firstWord == "add") {
 			addDisk(command);
 		} else if (firstWord == "remove") {
@@ -220,9 +220,17 @@ void Client::uploadObj(const std::string &command) {
 	
 }
 
-void Client::deleteObj() {
-	std::string test = "delete ";
-	send(sockfd, test.c_str(), test.length(), 0);
+void Client::deleteObj(const std::string &command) {
+	send(sockfd, command.c_str(), command.length(), 0);
+
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+	std::cout << buffer << std::endl;
+	
 }
 
 void Client::addDisk(const std::string &command) {

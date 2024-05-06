@@ -109,7 +109,7 @@ void Server::handleClient(int clientfd) {
             uploadObj(clientfd, command);
             continue;
         } else if (firstWord == "delete") {
-            deleteObj();
+            deleteObj(clientfd, command);
             continue;
         } else if (firstWord == "add") {
             addDisk(clientfd, command);
@@ -390,10 +390,85 @@ void Server::uploadObj(int clientfd, const std::string &command) {
     return;
 }
 
-void Server::deleteObj() {
+void Server::deleteObj(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received download command from client " << clientfd << std::endl;
 
-    std::cout << "Delete command" << std::endl;
+    size_t space = command.find(" ");
+    std::string fileObject = command.substr(space+1);
+    size_t slash = fileObject.find("/");
+    std::string fileName = fileObject.substr(slash+1);
+    std::string user = fileObject.substr(0,slash);
+
+    uint64_t partition = hashAndMap(fileName, power);
+    std::string mainMachine = objectManager.partitionMap.lookup(partition);
+    std::string backupMachine = objectManager.machineList.find(mainMachine)->next->ipAddress;
+
+    std::cout << "Main file mappings before object deletion" << std::endl;
+    objectManager.printMapping(objectManager.mainCopies);
+    std::cout << "Backup file mappings before object deletion" << std::endl;
+    objectManager.printMapping(objectManager.backupCopies);
+
+    std::vector<FileObject> mainMachineCopies = std::vector<FileObject>();
+    std::vector<FileObject> backupMachinCopies = std::vector<FileObject>();
+    std::map<std::string, std::vector<FileObject>> newMainCopies;
+    std::map<std::string, std::vector<FileObject>> newBackupCopies;
+
+    // Initialize machine copies
+    for (const auto &pair : objectManager.mainCopies) {
+        if (pair.first != mainMachine) {
+            newMainCopies.insert(pair);
+        }
+        else {
+            newMainCopies[mainMachine] = std::vector<FileObject>();
+        }
+    }
+    for (const auto &pair : objectManager.backupCopies) {
+        if (pair.first != backupMachine) {
+            newBackupCopies.insert(pair);
+        }
+        else {
+            newBackupCopies[backupMachine] = std::vector<FileObject>();
+        }
+    }
+
+    bool objectFound = false;
+    for (const auto &fileObject: objectManager.mainCopies[mainMachine]) {
+        if (fileObject.fileName == fileName && fileObject.user == user) {
+            objectFound = true;
+        } else {
+            mainMachineCopies.push_back(fileObject);
+        }
+    }
+    std::string serverResponse;
+    if (objectFound == false) {
+        serverResponse = "Server: object requested not found";
+        send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+        return;
+    }
+    
+    newMainCopies[mainMachine] = mainMachineCopies;
+    objectManager.mainCopies = newMainCopies;
+
+    for (const auto &fileObject: objectManager.backupCopies[backupMachine]) {
+        if (fileObject.fileName == fileName && fileObject.user == user) {
+            objectFound = true;
+        } else {
+            backupMachinCopies.push_back(fileObject);
+        }
+    }
+
+    newBackupCopies[backupMachine] = backupMachinCopies;
+    objectManager.backupCopies = newBackupCopies;
+    
+    std::cout << "Main file mappings after object deletion" << std::endl;
+    objectManager.printMapping(objectManager.mainCopies);
+    std::cout << "Backup file mappings after object deletion" << std::endl;
+    objectManager.printMapping(objectManager.backupCopies);
+    serverResponse = "Server: requested object found and deleted";
+    send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+    return;
+
 }
 
 void Server::addDisk(int clientfd, const std::string &command) {

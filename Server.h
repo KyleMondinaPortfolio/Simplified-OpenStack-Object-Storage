@@ -35,7 +35,7 @@ private:
     void downloadObj(int clientfd, const std::string &command);
     void listUser(int clientfd, const std::string &command);
     void uploadObj(int clientfd, const std::string &command);
-    void deleteObj();
+    void deleteObj(int clientfd, const std::string &command);
     void addDisk(int clientfd, const std::string &command);
     void removeDisk(int clientfd, const std::string &command);
     void cleanDisks(int clientfd, const std::string &command);
