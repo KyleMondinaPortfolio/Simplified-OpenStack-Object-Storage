@@ -24,7 +24,7 @@ public:
     void run();
 private: 
     int sockfd;
-    void downloadObj();
+    void downloadObj(const std::string &command);
     void listUser(const std::string &command);
     void uploadObj(const std::string &command);
     void deleteObj();

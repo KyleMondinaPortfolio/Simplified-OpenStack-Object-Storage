@@ -100,7 +100,7 @@ void Server::handleClient(int clientfd) {
         }
 
         if (firstWord == "download") {
-            downloadObj();
+            downloadObj(clientfd, command);
             continue;
         } else if (firstWord == "list") {
             listUser(clientfd, command);
@@ -127,10 +127,42 @@ void Server::handleClient(int clientfd) {
     close(clientfd);
 }
 
-void Server::downloadObj() {
+void Server::downloadObj(int clientfd, const std::string &command) {
     std::lock_guard<std::mutex> lock(mtx);
+    std::cout << "Received download command from client " << clientfd << std::endl;
 
-    std::cout << "Download command" << std::endl;
+    // Parse the file name
+    size_t space = command.find(' ');
+	std::string fileObject = command.substr(space+1);
+	size_t slash = fileObject.find('/');
+	std::string fileName = fileObject.substr(slash+1);
+    std::string user = fileObject.substr(0,slash);
+
+    // Grab the ipAddress of the main copy
+    uint64_t partition = hashAndMap(fileName, power);
+    std::string mainMachine = objectManager.partitionMap.lookup(partition);
+
+    // Grab the file object, if present
+    std::string fileDS;
+    bool objectFound = false;
+    for (const auto &fileObj: objectManager.mainCopies[mainMachine]) {
+        if (fileObj.fileName == fileName) {
+            objectFound = true;
+            fileDS = fileObj.ds;
+        }
+    }
+
+    std::string serverResponse;
+    if (!objectFound) {
+        serverResponse = "Server: requested object not found\n";
+        std::cout << serverResponse << std::endl;
+        send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+        return;
+    }
+    serverResponse = "Server: requested object found\n";
+    std::cout << serverResponse << std::endl;
+    send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
+    return;
 }
 
 void Server::listUser(int clientfd, const std::string &command) {
@@ -305,7 +337,7 @@ void Server::removeDisk(int clientfd, const std::string &command) {
         send(clientfd, serverResponse.c_str(), serverResponse.length(), 0);
         return;
     }
-    
+
     if (objectManager.machineCount <= 2) {
         std::string serverResponse = "Unable to remove machine, database needs at least two machines";
         std::cout << serverResponse << std::endl;

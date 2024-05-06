@@ -32,7 +32,7 @@ private:
     std::vector<std::string> ipAddresses;
     int power;
     std::mutex mtx;
-    void downloadObj();
+    void downloadObj(int clientfd, const std::string &command);
     void listUser(int clientfd, const std::string &command);
     void uploadObj(int clientfd, const std::string &command);
     void deleteObj();

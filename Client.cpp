@@ -62,7 +62,7 @@ void Client::run() {
 		}
 
 		if (firstWord == "download") {
-			downloadObj();
+			downloadObj(command);
 		} else if (firstWord == "list") {
 			listUser(command);
 		} else if (firstWord == "upload") {
@@ -82,9 +82,24 @@ void Client::run() {
 	
 }
 
-void Client::downloadObj() {
-	std::string test = "download ";
-	send(sockfd, test.c_str(), test.length(), 0);
+void Client::downloadObj(const std::string &command) {
+	send(sockfd, command.c_str(), command.length(), 0);
+
+	char buffer[BUFFER_SIZE] = {0};
+	int bytesReceived = recv(sockfd, buffer, BUFFER_SIZE, 0);
+	if (bytesReceived < 0){
+		std::cout << "Failed to get ack from server" << std::endl;
+		return;
+	}
+
+	if (buffer == "Server: requested object not found") {
+		std::cout << buffer << std::endl;
+		return;
+	}
+	
+	// Buffer contains the file size
+	std::cout << buffer << std::endl;
+	return;
 }
 
 void Client::listUser(const std::string &command) {
