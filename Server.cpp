@@ -436,6 +436,10 @@ void Server::deleteObj(int clientfd, const std::string &command) {
     for (const auto &fileObject: objectManager.mainCopies[mainMachine]) {
         if (fileObject.fileName == fileName && fileObject.user == user) {
             objectFound = true;
+            std::string filePath = "/tmp/kmondina/" + user + "/" + fileName;
+            std::string filePathMD = "/tmp/kmondina/" + user + "/." + fileName;
+            deleteDir(backupMachine, filePath);
+            deleteDir(backupMachine, filePathMD);
         } else {
             mainMachineCopies.push_back(fileObject);
         }
@@ -453,6 +457,10 @@ void Server::deleteObj(int clientfd, const std::string &command) {
     for (const auto &fileObject: objectManager.backupCopies[backupMachine]) {
         if (fileObject.fileName == fileName && fileObject.user == user) {
             objectFound = true;
+            std::string filePath = "/tmp/kmondina/" + user + "/" + fileName;
+            std::string filePathMD = "/tmp/kmondina/" + user + "/." + fileName;
+            deleteDir(mainMachine, filePath);
+            deleteDir(mainMachine, filePathMD);
         } else {
             backupMachinCopies.push_back(fileObject);
         }
