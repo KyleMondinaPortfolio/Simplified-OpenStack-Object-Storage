@@ -15,4 +15,17 @@ $ server 16 10.16.9.3 10.16.8.4 10.16.8.6
 Port number = 9999
 $ client 10.16.8.2 9999
 ```
-The routing process assumes any object consists of a unique user name and non unique object (i.e file) name in the form of ` user/object `  and hashed by md5sum <<< `<string>` 
+The routing process assumes any object consists of a unique user name and non unique object (i.e file) name in the form of ` user/object `  and hashed by md5sum <<< `<string>` A fix partition power is given. The algorithm always store object to the least-used drive. A device lookup table contains number-of-replica rows and number-of-partition columns, each entry is the drive to store the given object
+
+
+## Supported Commands
+- `download <user/object>` - display the content of `<user/object>`
+- `list <user>` - display the `<user>`'s objects/files in `ls –lrt` format
+- `upload <user/object>` - display which disks the `<user/object>` is saved
+- `delete <user/object>` - display a confirmation or error message
+- `add <disk>` - display new partitions with all `<user/object>` within
+- `remove <disk>` - display where old partitions went to
+- `clean` - clear all disks (i.e., all `/tmp/<login>` directories)
+
+The `md5` hashing takes the `<user/object>` input as a string, and generates a 128-bit hashed value in hex. You divide the hashed value into `2^partition power` partitions and assign partitions roughly equally to all disks you have. Assume that each machine only has one disk drive, so we use the machine name for the disk. We also assume all objects are text files.
+
