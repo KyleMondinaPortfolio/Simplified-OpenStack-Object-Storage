@@ -1,6 +1,8 @@
 # Simplified OpenStack Object Storage (SOSS)
 An implementation of a simplified OpenStack object storage using C++. SOOS stores and retrieves files on a 
-distributed file system with scale and provides software-defined-storage (SDS), which is scalable, durable, available, manageable, flexible, adaptable, open, economic, and eventually consistent. Programming assignement of Santa Clara University's Cloud Computing Class.
+distributed file system with scale and provides software-defined-storage (SDS), which is scalable, durable, available, manageable, flexible, adaptable, open, economic, and eventually consistent. 
+
+This project was completed as part of COEN 241 - Cloud Computing at Santa Clara University under the guidance of Professor Ming-Hwa Wang.
 
 ## SOSS Features
 - proxy process communicates with external clients, and accepts download, list, upload, (stat,) and delete operations
