@@ -15,3 +15,4 @@ $ server 16 10.16.9.3 10.16.8.4 10.16.8.6
 Port number = 9999
 $ client 10.16.8.2 9999
 ```
+The routing process assumes any object consists of a unique user name and non unique object (i.e file) name in the form of ` user/object `  and hashed by md5sum <<< `<string>` 
